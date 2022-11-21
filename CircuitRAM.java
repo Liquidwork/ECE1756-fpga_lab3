@@ -13,6 +13,13 @@ public class CircuitRAM {
         this.resource = new ResourceOrganizer(basicLUT);
     }
 
+    /**
+     * Parse all the rams in the given RAM list and generate a {@code CircuitRAM} with the specified logical RAM
+     * @param id id of the circuit
+     * @param basicLUT basic LUT usage of the circuit (excluding all memory related LUTs)
+     * @param ramRecord the LogicalRAM list
+     * @return a new instance of the {@code CircuitRAM} with logical RAM fully parsed
+     */
     public static CircuitRAM parseCircuit(int id, int basicLUT, List<LogicalRAM> ramRecord){
         CircuitRAM circuitRAM = new CircuitRAM(id, basicLUT);
         circuitRAM.logicRAMList = ramRecord;
@@ -134,6 +141,11 @@ public class CircuitRAM {
         return circuitRAM;
     }
 
+    /**
+     * Generate the mapping list for this RAM circuit. Each line represents the mapping for a
+     * logical RAM. The list can be used to generate the mapping file.
+     * @return a list of record
+     */
     public List<String> generateRecord(){
         List<String> list = new ArrayList<>();
         for (LogicalRAM ram : this.logicRAMList) {

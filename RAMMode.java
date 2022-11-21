@@ -22,6 +22,11 @@ public enum RAMMode {
 
     public abstract double widthUtilization();
 
+    /**
+     * Parse the mode from a string, return the corresponding type
+     * @param s input string
+     * @return the corresponding type. {@code null} if parsing failed
+     */
     public static RAMMode parseMode(String s){
         for(RAMMode mode : RAMMode.values()){
             if (s.equalsIgnoreCase(mode.toString())) return mode;
