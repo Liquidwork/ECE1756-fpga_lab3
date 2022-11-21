@@ -56,9 +56,20 @@ public class ResourceOrganizer {
         return  basicLUT + additionalLUT;
     }
 
+    /**
+     * Calculate the total area of the resource in use
+     * @return total area
+     */
     public int getTotalArea(){
-        // TODO: Implement the area calculation
-        return 0;
+        int area = 0;
+        for(RAMType type : RAMType.values()){
+            if (type.lutImpl() == 0) { // not a LUTRAM
+                int singleRamSize = 9000 + 5 * type.size() + 90 * (int) Math.ceil(Math.sqrt(type.size())) + 600 * 2 * type.maxWidth();
+                area += this.ramCount[type.ordinal()] * singleRamSize;
+            }
+        }
+        area += Math.ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * (35000 + 40000) / 2;
+        return area;
     }
 
     /**

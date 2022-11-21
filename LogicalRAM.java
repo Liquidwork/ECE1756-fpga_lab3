@@ -65,6 +65,7 @@ public class LogicalRAM {
             case 2:
                 decLUT = 1; // Special case
                 muxLUT = 1;
+                break;
             default: 
                 decLUT = this.serial;
                 muxLUT = Math.ceilDiv((this.serial-1), 3);
