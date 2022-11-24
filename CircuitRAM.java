@@ -2,15 +2,19 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 
 public class CircuitRAM {
     protected int id;
     protected ResourceOrganizer resource;
     protected List<LogicalRAM> logicRAMList;
+    protected List<RAMType> ramTypeList;
 
-    private CircuitRAM(int id, int basicLUT){
+    private CircuitRAM(int id, int basicLUT, Set<RAMType> ramTypeSet){
         this.id = id;
-        this.resource = new ResourceOrganizer(basicLUT);
+        this.ramTypeList = new ArrayList<>(ramTypeSet);
+        this.ramTypeList.sort(((o1, o2) -> o2.size() - o1.size())); // Place them in the descending order
+        this.resource = new ResourceOrganizer(basicLUT, ramTypeSet);
     }
 
     /**
@@ -20,8 +24,8 @@ public class CircuitRAM {
      * @param ramRecord the LogicalRAM list
      * @return a new instance of the {@code CircuitRAM} with logical RAM fully parsed
      */
-    public static CircuitRAM parseCircuit(int id, int basicLUT, List<LogicalRAM> ramRecord){
-        CircuitRAM circuitRAM = new CircuitRAM(id, basicLUT);
+    public static CircuitRAM parseCircuit(int id, int basicLUT, List<LogicalRAM> ramRecord, Set<RAMType> ramTypeSet){
+        CircuitRAM circuitRAM = new CircuitRAM(id, basicLUT, ramTypeSet);
         circuitRAM.logicRAMList = ramRecord;
         LinkedList<LogicalRAM> unparsedRecord = new LinkedList<>(ramRecord); // Clone the instance since we will operate the list
 

@@ -1,3 +1,6 @@
+import java.util.HashMap;
+import java.util.Set;
+
 /**
  * The class {@code ResourceOrganizer} supervise the usage of all resources
  * including basic logic LUT, LUTRAM, and BRAM.
@@ -6,16 +9,21 @@ public class ResourceOrganizer {
     protected int basicLUT;
     protected int additionalLUT;
     protected int tempLUT; // Space added for more memory resources
-    protected int[] ramCount = new int[RAMType.values().length];
+    protected HashMap<RAMType, Integer> ramCount;
 
     /**
      * Generate an instance of {@link ResourceOrganizer} with the basic LUT count
      * @param basicLUT the LUT count without ram related usage
      * @apiNote this is the LUT count not logic block count
      */
-    public ResourceOrganizer(int basicLUT){
+    public ResourceOrganizer(int basicLUT, Set<RAMType> ramTypeSet){
         this.basicLUT = basicLUT;
         this.additionalLUT = 0;
+        this.ramCount = new HashMap<>(ramTypeSet.size());
+        // Initialize the ramCount Hash map
+        for(RAMType type : ramTypeSet){
+            this.ramCount.put(type, 0); // Initialize all entry as 0
+        }
     }
 
     /**
@@ -25,7 +33,7 @@ public class ResourceOrganizer {
      * @return if it is ready to add, return true
      */
     public boolean ready(RAMType type, int count){
-        if (ramCount[type.ordinal()] + count > getLUTRequired() / type.lutRatio() / MemoryCAD.LOGICBLOCKLUT){
+        if (ramCount.get(type) + count > getLUTRequired() / type.lutRatio() / MemoryCAD.LOGICBLOCKLUT){
             return false;
         }
         return true;
@@ -62,11 +70,11 @@ public class ResourceOrganizer {
      */
     public int getTotalArea(){
         int area = 0;
-        for(RAMType type : RAMType.values()){
+        for(RAMType type : ramCount.keySet()){
             if (type.lutImpl() == 0) { // not a LUTRAM
                 // half of the LUT can implement LUT RAM, simply average the area usage
                 int singleRamSize = 9000 + 5 * type.size() + 90 * (int) Math.ceil(Math.sqrt(type.size())) + 600 * 2 * type.maxWidth();
-                area += this.ramCount[type.ordinal()] * singleRamSize;
+                area += this.ramCount.get(type) * singleRamSize;
             }
         }
         area += Math.ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * (35000 + 40000) / 2;
@@ -79,7 +87,7 @@ public class ResourceOrganizer {
      * @param count
      */
     public void addRAM(RAMType type, int count){
-        ramCount[type.ordinal()] += count;
+        ramCount.replace(type, ramCount.get(type) + count);
     }
 
     /**
@@ -101,8 +109,8 @@ public class ResourceOrganizer {
         if(tempLUT == 0) return;
         // Find minimum LUT needed (maximum among needed value)
         int minNeededLUT = 0;
-        for (RAMType type : RAMType.values()){
-            int needed = ramCount[type.ordinal()] * type.lutRatio() * MemoryCAD.LOGICBLOCKLUT;
+        for (RAMType type : ramCount.keySet()){
+            int needed = ramCount.get(type) * type.lutRatio() * MemoryCAD.LOGICBLOCKLUT;
             if(needed > minNeededLUT) minNeededLUT = needed;
         }
         tempLUT -= getLUTRequired() - minNeededLUT;
@@ -115,8 +123,8 @@ public class ResourceOrganizer {
                     "Additional LUT: " + additionalLUT + "\n" +
                     "Margin LUT: " + tempLUT + "\n" +
                     "RAM usage: \n";
-        for (RAMType type : RAMType.values()){
-            s += " -" + type + ": " + ramCount[type.ordinal()] + "/" + 
+        for (RAMType type : ramCount.keySet()){
+            s += " -" + type + ": " + ramCount.get(type) + "/" + 
             getLUTRequired() / type.lutRatio() / MemoryCAD.LOGICBLOCKLUT+ "\n";
         }
         return s;
