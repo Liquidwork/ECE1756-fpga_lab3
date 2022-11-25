@@ -75,7 +75,7 @@ public class MemoryCAD {
             for (int size = 1; size <=128; size *= 2){
                 int optimal_width = 0, optimal_ratio = 0;
                 double minimumArea = Double.MAX_VALUE;
-                for (int width = 1; width <= 128; width *= 2){
+                for (int width = 1; width <= 512; width *= 2){
                     for (int ratio = 1; ratio <= 512; ratio *= 2){
                         RAMType ramType = new BRAM(size * 1024, width, ratio);
                         ArrayList<RAMType> ramTypes = new ArrayList<>();
@@ -92,7 +92,7 @@ public class MemoryCAD {
                             optimal_width = width;
                             optimal_ratio = ratio;
                         }
-                        System.out.println(size + ", " + width + ", " + ratio + ", " + area);
+                        System.out.println(size + ", " + width + ", " + ratio + ", " + accProduct);
                     }
                 }
                 writer.println(size + ", " + optimal_width + ", " + optimal_ratio + ", " + minimumArea);
