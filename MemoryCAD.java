@@ -60,40 +60,42 @@ public class MemoryCAD {
             SimpleDateFormat format = new SimpleDateFormat("yy_MM_dd_HH_mm_ss");
             String timestamp = format.format(new Date());
             // Make an output dir with timestamp
-            File dir = new File("output");
+            File dir = new File("output_e");
             if (!dir.isDirectory()) {
                 dir.mkdir();
             }
             dir = new File(dir, timestamp);
             dir.mkdir();
 
-            file = new File(dir, "map.txt");
+            file = new File(dir, "optimization_result.txt");
             PrintWriter writer = new PrintWriter(file);
+            writer.println("Size, width, ratio, average area");
             // Start the execution
             CircuitRAM[] circuits = new CircuitRAM[circuitNum];
-            for (int i = 0; i < circuits.length; i++) {
-                System.out.println("Fitting circuit " + i);
-                circuits[i] = CircuitRAM.parseCircuit(i, logicBlockCount[i] * 10, ramRecordsList[i]);
-                System.out.println(circuits[i].resource);
-                for (String s : circuits[i].generateRecord()) {
-                    writer.println(s);
+            for (int size = 1; size <=128; size *= 2){
+                int optimal_width = 0, optimal_ratio = 0;
+                double minimumArea = Double.MAX_VALUE;
+                for (int width = 1; width <= 128; width *= 2){
+                    for (int ratio = 1; ratio <= 512; ratio *= 2){
+                        RAMType ramType = new BRAM(size * 1024, width, ratio);
+                        ArrayList<RAMType> ramTypes = new ArrayList<>();
+                        ramTypes.add(ramType);
+                        double accProduct = 1;
+                        long area = 0;
+                        for (int i = 0; i < circuits.length; i++) {
+                            circuits[i] = CircuitRAM.parseCircuit(i, logicBlockCount[i] * 10, ramRecordsList[i], ramTypes);
+                            area = circuits[i].resource.getTotalArea();
+                            accProduct *= Math.pow(area, 1 / (double)circuits.length);
+                        }
+                        if (accProduct < minimumArea){
+                            minimumArea = accProduct;
+                            optimal_width = width;
+                            optimal_ratio = ratio;
+                        }
+                        System.out.println(size + ", " + width + ", " + ratio + ", " + area);
+                    }
                 }
-            }
-            writer.close();
-            // Print the stats of resource usage
-            file = new File(dir, "stats.csv");
-            writer = new PrintWriter(file);
-            // print the line title at first line in csv format
-            writer.println("ciruit_id,lutram,8kBRAM,128kBRAM,regularLB,requiredLB,TotalArea");
-            for (int i = 0; i < circuits.length; i++) {
-                line = circuits[i].id + ",";
-                line += circuits[i].resource.ramCount[RAMType.LUTRAM.ordinal()] + ",";
-                line += circuits[i].resource.ramCount[RAMType.BRAM8192.ordinal()] + ",";
-                line += circuits[i].resource.ramCount[RAMType.BRAM128k.ordinal()] + ",";
-                line += Math.ceilDiv(circuits[i].resource.getLUTRegular(), MemoryCAD.LOGICBLOCKLUT) + ",";
-                line += Math.ceilDiv(circuits[i].resource.getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) + ",";
-                line += circuits[i].resource.getTotalArea();
-                writer.println(line);
+                writer.println(size + ", " + optimal_width + ", " + optimal_ratio + ", " + minimumArea);
             }
             writer.close();
         }catch (IOException ioe){

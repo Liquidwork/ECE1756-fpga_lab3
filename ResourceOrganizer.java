@@ -1,5 +1,5 @@
 import java.util.HashMap;
-import java.util.Set;
+import java.util.List;
 
 /**
  * The class {@code ResourceOrganizer} supervise the usage of all resources
@@ -16,7 +16,7 @@ public class ResourceOrganizer {
      * @param basicLUT the LUT count without ram related usage
      * @apiNote this is the LUT count not logic block count
      */
-    public ResourceOrganizer(int basicLUT, Set<RAMType> ramTypeSet){
+    public ResourceOrganizer(int basicLUT, List<RAMType> ramTypeSet){
         this.basicLUT = basicLUT;
         this.additionalLUT = 0;
         this.ramCount = new HashMap<>(ramTypeSet.size());
@@ -72,11 +72,10 @@ public class ResourceOrganizer {
         int area = 0;
         for(RAMType type : ramCount.keySet()){
             if (type.lutImpl() == 0) { // not a LUTRAM
-                // half of the LUT can implement LUT RAM, simply average the area usage
-                int singleRamSize = 9000 + 5 * type.size() + 90 * (int) Math.ceil(Math.sqrt(type.size())) + 600 * 2 * type.maxWidth();
-                area += this.ramCount.get(type) * singleRamSize;
+                area += Math.ceilDiv(getLUTRequired(), type.lutRatio());
             }
         }
+        // half of the LUT can implement LUT RAM, simply average the area usage
         area += Math.ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * (35000 + 40000) / 2;
         return area;
     }
