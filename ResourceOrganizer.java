@@ -66,7 +66,7 @@ public class ResourceOrganizer {
             if (type.lutImpl() == 0) { // not a LUTRAM
                 // half of the LUT can implement LUT RAM, simply average the area usage
                 int singleRamSize = 9000 + 5 * type.size() + 90 * (int) Math.ceil(Math.sqrt(type.size())) + 600 * 2 * type.maxWidth();
-                area += this.ramCount[type.ordinal()] * singleRamSize;
+                area += Math.ceilDiv(getLUTRequired(), type.lutRatio()) * singleRamSize;
             }
         }
         area += Math.ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * (35000 + 40000) / 2;
