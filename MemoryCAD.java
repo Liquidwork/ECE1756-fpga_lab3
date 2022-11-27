@@ -100,7 +100,7 @@ public class MemoryCAD {
             file = new File(dir, "stats.csv");
             writer = new PrintWriter(file);
             // print the line title at first line in csv format
-            writer.println("ciruit_id,lutram,8kBRAM,128kBRAM,regularLB,requiredLB,TotalArea");
+            writer.println("Circuit #,lutram,8kBRAM,128kBRAM,regularLB,requiredLB,TotalArea");
             for (int i = 0; i < circuits.length; i++) {
                 line = circuits[i].id + ",";
                 line += circuits[i].resource.ramCount.get(typeSet.get(0)) + ",";
