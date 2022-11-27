@@ -1,26 +1,26 @@
 public enum RAMMode {
     ROM{
-        public double widthUtilization(){
+        public double getWidthUtilization(){
             return 1.;
         }
     }, 
     SINGLEPORT{
-        public double widthUtilization(){
+        public double getWidthUtilization(){
             return 1.;
         }
     }, 
     SIMPLEDUALPORT{
-        public double widthUtilization(){
+        public double getWidthUtilization(){
             return 1.;
         }
     }, 
     TRUEDUALPORT{
-        public double widthUtilization(){
+        public double getWidthUtilization(){
             return 0.5;
         }
     };
 
-    public abstract double widthUtilization();
+    public abstract double getWidthUtilization();
 
     /**
      * Parse the mode from a string, return the corresponding type
