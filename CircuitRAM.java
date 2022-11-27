@@ -46,6 +46,59 @@ public class CircuitRAM {
                 circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
             }
             break;
+            
+            case 2:
+            // Try to implement with BRAM until full
+            while(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
+                LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
+                // Peek the size of this element as if implemented in such type of RAM
+                if (!circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
+                ram.parse(circuitRAM.ramTypeList.get(0));
+                circuitRAM.resource.addLUT(ram.additionalLUT);
+                circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                unparsedRecord.removeLast();
+            }
+
+            while(unparsedRecord.size() > 0){
+
+                boolean ramParsed = false; 
+                // If this flag is false after the loop block, this means all the resources
+                // runs out. So we need to allocate some more LUT for this circuit (wastage)
+
+                // parse a LUTRAM
+                if(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(1), unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1))) && 
+                unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1)) <= 16) {
+                    // When LUT allocation
+                    LogicalRAM ram = unparsedRecord.removeFirst();
+                    ram.parse(circuitRAM.ramTypeList.get(1));
+                    circuitRAM.resource.addLUT(ram.additionalLUT);
+                    circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                    circuitRAM.resource.addLUT(ram.serial * ram.parallel * MemoryCAD.LOGICBLOCKLUT);
+                    ramParsed = true;
+                }
+                
+                while(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
+                    LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
+                    // Peek the size of this element as if implemented in such type of RAM
+                    if (!circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
+                    ram.parse(circuitRAM.ramTypeList.get(0));
+                    circuitRAM.resource.addLUT(ram.additionalLUT);
+                    circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                    unparsedRecord.removeLast();
+                    ramParsed = true;
+                }
+                
+                if (ramParsed == false){ // Allocate some temporal LUT so that the program will not stuck
+                    int lutTemp = unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1));
+                    if(unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1)) >= 16) lutTemp = Integer.MAX_VALUE; // Not taken
+                    int bramTemp = unparsedRecord.getLast().peekSize(circuitRAM.ramTypeList.get(0)) * circuitRAM.ramTypeList.get(0).getLutRatio();
+                    int minTempLUTIncrease = lutTemp > bramTemp ? bramTemp : lutTemp;
+                    circuitRAM.resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
+                    // We can add a little bit more TempLUT, b/c we will clean the unused tempLUT anyway
+                }
+            }
+            break;
+
             case 3:
             List<LogicalRAM> trueDualPortList = new ArrayList<>();
 
@@ -153,6 +206,10 @@ public class CircuitRAM {
                 }
             }
             break;
+            case 0:
+            throw new RuntimeException("No valid input RAM type");
+            default:
+            throw new RuntimeException("At most three types of RAM is supported");
         }
 
         circuitRAM.resource.releaseTempLUT(); // try to release some of the tempLUT.

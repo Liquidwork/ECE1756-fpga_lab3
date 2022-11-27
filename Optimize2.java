@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
 
-public class Optimize1 {
+public class Optimize2 {
 
     public static void main(String[] args){
         try {
@@ -58,7 +58,7 @@ public class Optimize1 {
             SimpleDateFormat format = new SimpleDateFormat("yy_MM_dd_HH_mm_ss");
             String timestamp = format.format(new Date());
             // Make an output dir with timestamp
-            File dir = new File("output_e");
+            File dir = new File("output_f");
             if (!dir.isDirectory()) {
                 dir.mkdir();
             }
@@ -68,6 +68,8 @@ public class Optimize1 {
             file = new File(dir, "optimization_result.txt");
             PrintWriter writer = new PrintWriter(file);
             writer.println("Size, width, ratio, average area");
+            // Prepare the LUTRAM instance
+            LUTRAM lutram = new LUTRAM(1, 64 * 10, 10, 20, 2 * MemoryCAD.LOGICBLOCKLUT);
             // Start the execution
             CircuitRAM[] circuits = new CircuitRAM[circuitNum];
             for (int size = 1; size <=128; size *= 2){
@@ -75,8 +77,9 @@ public class Optimize1 {
                 double minimumArea = Double.MAX_VALUE;
                 for (int width = 1; width <= 512; width *= 2){
                     for (int ratio = 1; ratio <= 512; ratio *= 2){
-                        RAMType ramType = new BRAM(1, size * 1024, width, ratio * MemoryCAD.LOGICBLOCKLUT);
+                        RAMType ramType = new BRAM(2, size * 1024, width, ratio * MemoryCAD.LOGICBLOCKLUT);
                         ArrayList<RAMType> ramTypes = new ArrayList<>();
+                        ramTypes.add(lutram);
                         ramTypes.add(ramType);
                         double accProduct = 1;
                         long area = 0;
@@ -101,4 +104,3 @@ public class Optimize1 {
         }
     }
 }
-
