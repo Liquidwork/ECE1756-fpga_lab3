@@ -33,8 +33,8 @@ public class LogicalRAM {
         int physicalWidth = selectedWidth;
         int physicalDepth = type.getSize() / selectedWidth;
         
-        int parallel = Math.ceilDiv(this.w, physicalWidth);
-        int serial = Math.ceilDiv(this.d, physicalDepth);
+        int parallel = ceilDiv(this.w, physicalWidth);
+        int serial = ceilDiv(this.d, physicalDepth);
         return parallel * serial;
     }
 
@@ -52,8 +52,8 @@ public class LogicalRAM {
         this.physicalWidth = selectedWidth;
         this.physicalDepth = type.getSize() / selectedWidth;
         
-        this.parallel = Math.ceilDiv(this.w, this.physicalWidth);
-        this.serial = Math.ceilDiv(this.d, this.physicalDepth);
+        this.parallel = ceilDiv(this.w, this.physicalWidth);
+        this.serial = ceilDiv(this.d, this.physicalDepth);
 
         // Resolve additional LUT in a line (serial)
         int decLUT, muxLUT;
@@ -68,8 +68,22 @@ public class LogicalRAM {
                 break;
             default: 
                 decLUT = this.serial;
-                muxLUT = Math.ceilDiv((this.serial-1), 3);
+                muxLUT = ceilDiv((this.serial-1), 3);
         }
         this.additionalLUT = (decLUT + muxLUT) * this.parallel + this.serial * this.parallel * this.type.getLutImpl();
     }
+
+    /**
+     * Introduced after java 11. Added to support ug machine...
+     * @param x
+     * @param y
+     * @return
+     */
+    private static int ceilDiv(int x, int y){
+        int result = x / y;
+        if (x % y == 0) return result;
+        return result + 1;
+    }
 }
+
+

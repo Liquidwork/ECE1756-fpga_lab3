@@ -106,8 +106,8 @@ public class MemoryCAD {
                 line += circuits[i].resource.ramCount.get(typeSet.get(0)) + ",";
                 line += circuits[i].resource.ramCount.get(typeSet.get(1)) + ",";
                 line += circuits[i].resource.ramCount.get(typeSet.get(2)) + ",";
-                line += Math.ceilDiv(circuits[i].resource.getLUTRegular(), MemoryCAD.LOGICBLOCKLUT) + ",";
-                line += Math.ceilDiv(circuits[i].resource.getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) + ",";
+                line += ceilDiv(circuits[i].resource.getLUTRegular(), MemoryCAD.LOGICBLOCKLUT) + ",";
+                line += ceilDiv(circuits[i].resource.getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) + ",";
                 line += circuits[i].resource.getTotalArea();
                 writer.println(line);
             }
@@ -138,5 +138,18 @@ public class MemoryCAD {
             mode, ram.physicalWidth, ram.physicalDepth ));
         }
         return list;
+    }
+
+
+    /**
+     * Introduced after java 11. Added to support ug machine...
+     * @param x
+     * @param y
+     * @return
+     */
+    private static int ceilDiv(int x, int y){
+        int result = x / y;
+        if (x % y == 0) return result;
+        return result + 1;
     }
 }

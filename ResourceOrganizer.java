@@ -1,6 +1,5 @@
 import java.util.HashMap;
 import java.util.List;
-import java.lang.Math;
 
 /**
  * The class {@code ResourceOrganizer} supervise the usage of all resources
@@ -75,11 +74,11 @@ public class ResourceOrganizer {
             if (type.getLutImpl() == 0) { // not a LUTRAM
                 long singleRamSize = 9000 + 5 * type.getSize() + 90 * (int) Math.ceil(Math.sqrt(type.getSize())) + 600 * 2 * type.getMaxWidth();
 
-                area += Math.ceilDiv(getLUTRequired(), type.getLutRatio()) * singleRamSize;
+                area += ceilDiv(getLUTRequired(), type.getLutRatio()) * singleRamSize;
             }
         }
         // half of the LUT can implement LUT RAM, simply average the area usage
-        area += (long) Math.ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * (35000 + 40000) / 2;
+        area += (long) ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * (35000 + 40000) / 2;
         return area;
     }
 
@@ -121,6 +120,18 @@ public class ResourceOrganizer {
         }
         tempLUT -= getLUTRequired() - minNeededLUT;
         tempLUT = tempLUT < 0 ? 0 : tempLUT; // The value should not drop less than 0
+    }
+
+    /**
+     * Introduced after java 11. Added to support ug machine...
+     * @param x
+     * @param y
+     * @return
+     */
+    private static int ceilDiv(int x, int y){
+        int result = x / y;
+        if (x % y == 0) return result;
+        return result + 1;
     }
 
     @Override
