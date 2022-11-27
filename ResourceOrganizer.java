@@ -99,6 +99,10 @@ public class ResourceOrganizer {
         additionalLUT += count;
     }
 
+    /**
+     * Add a temporal LUT, to increase the capacity of each resource
+     * @param count
+     */
     public void addTempLUT(int count){
         tempLUT += count;
     }

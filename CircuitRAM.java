@@ -27,6 +27,7 @@ public class CircuitRAM {
         CircuitRAM circuitRAM = new CircuitRAM(id, basicLUT, ramTypeSet);
         circuitRAM.logicRAMList = ramRecord;
         LinkedList<LogicalRAM> unparsedRecord = new LinkedList<>(ramRecord); // Clone the instance since we will operate the list
+        ResourceOrganizer resource = circuitRAM.resource;
 
         // First, place all logical RAM in size-order
 
@@ -38,24 +39,24 @@ public class CircuitRAM {
             RAMType type = circuitRAM.ramTypeList.get(0);
             for (LogicalRAM ram : unparsedRecord) {
                 int ramUsage = ram.peekSize(type);
-                if(!circuitRAM.resource.ready(type, ramUsage)){
-                    circuitRAM.resource.addTempLUT(ramUsage);
+                if(!resource.ready(type, ramUsage)){
+                    resource.addTempLUT(ramUsage);
                 }
                 ram.parse(type);
-                circuitRAM.resource.addLUT(ram.additionalLUT);
-                circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                resource.addLUT(ram.additionalLUT);
+                resource.addRAM(ram.type, ram.serial * ram.parallel);
             }
             break;
             
             case 2:
             // Try to implement with BRAM until full
-            while(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
+            while(resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
                 LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
                 // Peek the size of this element as if implemented in such type of RAM
-                if (!circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
+                if (!resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
                 ram.parse(circuitRAM.ramTypeList.get(0));
-                circuitRAM.resource.addLUT(ram.additionalLUT);
-                circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                resource.addLUT(ram.additionalLUT);
+                resource.addRAM(ram.type, ram.serial * ram.parallel);
                 unparsedRecord.removeLast();
             }
 
@@ -66,24 +67,24 @@ public class CircuitRAM {
                 // runs out. So we need to allocate some more LUT for this circuit (wastage)
 
                 // parse a LUTRAM
-                if(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(1), unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1))) && 
+                if(resource.ready(circuitRAM.ramTypeList.get(1), unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1))) && 
                 unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1)) <= 16) {
                     // When LUT allocation
                     LogicalRAM ram = unparsedRecord.removeFirst();
                     ram.parse(circuitRAM.ramTypeList.get(1));
-                    circuitRAM.resource.addLUT(ram.additionalLUT);
-                    circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
-                    circuitRAM.resource.addLUT(ram.serial * ram.parallel * MemoryCAD.LOGICBLOCKLUT);
+                    resource.addLUT(ram.additionalLUT);
+                    resource.addRAM(ram.type, ram.serial * ram.parallel);
+                    resource.addLUT(ram.serial * ram.parallel * MemoryCAD.LOGICBLOCKLUT);
                     ramParsed = true;
                 }
                 
-                while(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
+                while(resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
                     LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
                     // Peek the size of this element as if implemented in such type of RAM
-                    if (!circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
+                    if (!resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
                     ram.parse(circuitRAM.ramTypeList.get(0));
-                    circuitRAM.resource.addLUT(ram.additionalLUT);
-                    circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                    resource.addLUT(ram.additionalLUT);
+                    resource.addRAM(ram.type, ram.serial * ram.parallel);
                     unparsedRecord.removeLast();
                     ramParsed = true;
                 }
@@ -93,7 +94,7 @@ public class CircuitRAM {
                     if(unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1)) >= 16) lutTemp = Integer.MAX_VALUE; // Not taken
                     int bramTemp = unparsedRecord.getLast().peekSize(circuitRAM.ramTypeList.get(0)) * circuitRAM.ramTypeList.get(0).getLutRatio();
                     int minTempLUTIncrease = lutTemp > bramTemp ? bramTemp : lutTemp;
-                    circuitRAM.resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
+                    resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
                     // We can add a little bit more TempLUT, b/c we will clean the unused tempLUT anyway
                 }
             }
@@ -109,7 +110,7 @@ public class CircuitRAM {
             }
 
             for (LogicalRAM ram : trueDualPortList) {
-                if (ram.w * ram.d > 16 && circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0), ram.peekSize(circuitRAM.ramTypeList.get(0)))){
+                if (ram.w * ram.d > 16 && resource.ready(circuitRAM.ramTypeList.get(0), ram.peekSize(circuitRAM.ramTypeList.get(0)))){
                     ram.parse(circuitRAM.ramTypeList.get(0));
                 } else {
                     ram.parse(circuitRAM.ramTypeList.get(1));
@@ -120,13 +121,13 @@ public class CircuitRAM {
 
             // Start Generating the largest logical RAM with BRAM until reach the limit
 
-            while(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
+            while(resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
                 LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
                 // Peek the size of this element as if implemented in such type of RAM
-                if (!circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
+                if (!resource.ready(circuitRAM.ramTypeList.get(0),  ram.peekSize(circuitRAM.ramTypeList.get(0)))) break;
                 ram.parse(circuitRAM.ramTypeList.get(0));
-                circuitRAM.resource.addLUT(ram.additionalLUT);
-                circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                resource.addLUT(ram.additionalLUT);
+                resource.addRAM(ram.type, ram.serial * ram.parallel);
                 unparsedRecord.removeLast();
             }
 
@@ -135,13 +136,13 @@ public class CircuitRAM {
             // If capacity increases, we can even try to replace the second largest RAM with the largest RAM implementation
             Queue<LogicalRAM> secondLargestRAM = new LinkedList<>();
 
-            while(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(1)) && unparsedRecord.size() > 0){
+            while(resource.ready(circuitRAM.ramTypeList.get(1)) && unparsedRecord.size() > 0){
                 LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
                 // Peek the size of this element as if implemented in such type of RAM
-                if (!circuitRAM.resource.ready(circuitRAM.ramTypeList.get(1),  ram.peekSize(circuitRAM.ramTypeList.get(1)))) break;
+                if (!resource.ready(circuitRAM.ramTypeList.get(1),  ram.peekSize(circuitRAM.ramTypeList.get(1)))) break;
                 ram.parse(circuitRAM.ramTypeList.get(1));
-                circuitRAM.resource.addLUT(ram.additionalLUT);
-                circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                resource.addLUT(ram.additionalLUT);
+                resource.addRAM(ram.type, ram.serial * ram.parallel);
                 secondLargestRAM.offer(ram); // Record the second largest from the largest to the smallest
                 unparsedRecord.removeLast();
             }
@@ -155,42 +156,42 @@ public class CircuitRAM {
                 // runs out. So we need to allocate some more LUT for this circuit (wastage)
 
                 // parse a LUTRAM
-                if(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(2), unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2))) && 
+                if(resource.ready(circuitRAM.ramTypeList.get(2), unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2))) && 
                 unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2)) <= 16) {
                     // When LUT allocation
                     LogicalRAM ram = unparsedRecord.removeFirst();
                     ram.parse(circuitRAM.ramTypeList.get(2));
-                    circuitRAM.resource.addLUT(ram.additionalLUT);
-                    circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
-                    circuitRAM.resource.addLUT(ram.serial * ram.parallel * MemoryCAD.LOGICBLOCKLUT);
+                    resource.addLUT(ram.additionalLUT);
+                    resource.addRAM(ram.type, ram.serial * ram.parallel);
+                    resource.addLUT(ram.serial * ram.parallel * MemoryCAD.LOGICBLOCKLUT);
                     ramParsed = true;
                 }
 
                 // Try to replace the second largest RAM with the largest one
 
                 while (secondLargestRAM.size() > 0 &&
-                circuitRAM.resource.ready(circuitRAM.ramTypeList.get(0), 
+                resource.ready(circuitRAM.ramTypeList.get(0), 
                 secondLargestRAM.peek().peekSize(circuitRAM.ramTypeList.get(0)))){ // The element with largest size
                     LogicalRAM ram = secondLargestRAM.poll();
                     // Remove the related resource usage record
-                    circuitRAM.resource.addLUT(-ram.additionalLUT);
-                    circuitRAM.resource.addRAM(ram.type, - ram.serial * ram.parallel);
+                    resource.addLUT(-ram.additionalLUT);
+                    resource.addRAM(ram.type, - ram.serial * ram.parallel);
                     // Parse the ram again with the largest RAM type
                     ram.parse(circuitRAM.ramTypeList.get(0));
-                    circuitRAM.resource.addLUT(ram.additionalLUT);
-                    circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                    resource.addLUT(ram.additionalLUT);
+                    resource.addRAM(ram.type, ram.serial * ram.parallel);
                     // No need to operate unparsedRecord list
                     ramParsed = true;
                 }
                 // Try to generate second largest RAMs
                 
-                while(circuitRAM.resource.ready(circuitRAM.ramTypeList.get(1)) && unparsedRecord.size() > 0){
+                while(resource.ready(circuitRAM.ramTypeList.get(1)) && unparsedRecord.size() > 0){
                     LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
                     // Peek the size of this element as if implemented in such type of RAM
-                    if (!circuitRAM.resource.ready(circuitRAM.ramTypeList.get(1),  ram.peekSize(circuitRAM.ramTypeList.get(1)))) break;
+                    if (!resource.ready(circuitRAM.ramTypeList.get(1),  ram.peekSize(circuitRAM.ramTypeList.get(1)))) break;
                     ram.parse(circuitRAM.ramTypeList.get(1));
-                    circuitRAM.resource.addLUT(ram.additionalLUT);
-                    circuitRAM.resource.addRAM(ram.type, ram.serial * ram.parallel);
+                    resource.addLUT(ram.additionalLUT);
+                    resource.addRAM(ram.type, ram.serial * ram.parallel);
                     secondLargestRAM.offer(ram); // Record the second largest from the largest to the smallest
                     unparsedRecord.removeLast();
                     ramParsed = true;
@@ -201,7 +202,7 @@ public class CircuitRAM {
                     if(unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2)) >= 16) lutTemp = Integer.MAX_VALUE; // Not taken
                     int bramTemp = unparsedRecord.getLast().peekSize(circuitRAM.ramTypeList.get(1)) * circuitRAM.ramTypeList.get(1).getLutRatio();
                     int minTempLUTIncrease = lutTemp > bramTemp ? bramTemp : lutTemp;
-                    circuitRAM.resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
+                    resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
                     // We can add a little bit more TempLUT, b/c we will clean the unused tempLUT anyway
                 }
             }
@@ -212,7 +213,7 @@ public class CircuitRAM {
             throw new RuntimeException("At most three types of RAM is supported");
         }
 
-        circuitRAM.resource.releaseTempLUT(); // try to release some of the tempLUT.
+        resource.releaseTempLUT(); // try to release some of the tempLUT.
 
         return circuitRAM;
     }
