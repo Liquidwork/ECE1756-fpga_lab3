@@ -141,7 +141,7 @@ public class ResourceOrganizer {
                     "Margin LUT: " + tempLUT + "\n" +
                     "RAM usage: \n";
         for (RAMType type : ramCount.keySet()){
-            s += " -" + type + ": " + ramCount.get(type) + "/" + 
+            s += " -" + type.getClass() + "(" + type.getSize() + " bits): " + ramCount.get(type) + "/" + 
             getLUTRequired() / type.getLutRatio()+ "\n";
         }
         return s;
