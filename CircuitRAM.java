@@ -12,7 +12,7 @@ public class CircuitRAM {
     private CircuitRAM(int id, int basicLUT, List<RAMType> ramTypeSet){
         this.id = id;
         this.ramTypeList = new ArrayList<>(ramTypeSet);
-        this.ramTypeList.sort(((o1, o2) -> o2.size() - o1.size())); // Place them in the descending order
+        this.ramTypeList.sort(((o1, o2) -> o2.getSize() - o1.getSize())); // Place them in the descending order
         this.resource = new ResourceOrganizer(basicLUT, ramTypeSet);
     }
 
@@ -146,7 +146,7 @@ public class CircuitRAM {
                 if (ramParsed == false){ // Allocate some temporal LUT so that the program will not stuck
                     int lutTemp = unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2));
                     if(unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2)) >= 16) lutTemp = Integer.MAX_VALUE; // Not taken
-                    int bramTemp = unparsedRecord.getLast().peekSize(circuitRAM.ramTypeList.get(1)) * circuitRAM.ramTypeList.get(1).lutRatio();
+                    int bramTemp = unparsedRecord.getLast().peekSize(circuitRAM.ramTypeList.get(1)) * circuitRAM.ramTypeList.get(1).getLutRatio();
                     int minTempLUTIncrease = lutTemp > bramTemp ? bramTemp : lutTemp;
                     circuitRAM.resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
                     // We can add a little bit more TempLUT, b/c we will clean the unused tempLUT anyway
@@ -159,32 +159,4 @@ public class CircuitRAM {
 
         return circuitRAM;
     }
-
-    /**
-     * Generate the mapping list for this RAM circuit. Each line represents the mapping for a
-     * logical RAM. The list can be used to generate the mapping file.
-     * @return a list of record
-     */
-    // public List<String> generateRecord(){
-    //     List<String> list = new ArrayList<>();
-    //     for (LogicalRAM ram : this.logicRAMList) {
-    //         int type = 0;
-    //         switch(ram.type){
-    //             case LUTRAM:    type = 1; break;
-    //             case BRAM8192:  type = 2; break;
-    //             case BRAM128k:  type = 3; break;
-    //         }
-    //         String mode = "";
-    //         switch(ram.mode){
-    //             case ROM:               mode = "ROM"; break;
-    //             case SIMPLEDUALPORT:    mode = "SimpleDualPort"; break;
-    //             case SINGLEPORT:        mode = "SinglePort"; break;
-    //             case TRUEDUALPORT:      mode = "TrueDualPort"; break;
-    //         }
-    //         list.add(String.format("%d %d %d LW %d LD %d ID %d S %d P %d Type %d Mode %s W %d D %d", 
-    //         this.id, ram.id, ram.additionalLUT, ram.w, ram.d, ram.id, ram.serial, ram.parallel, type,
-    //         mode, ram.physicalWidth, ram.physicalDepth ));
-    //     }
-    //     return list;
-    // }
 }

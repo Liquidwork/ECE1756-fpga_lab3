@@ -26,12 +26,12 @@ public class LogicalRAM {
         // Allocate physical RAM according to the type, mode and width
 
         // Satisfy depth first, b/c linking RAM parallel has no penalty
-        int selectedWidth = type.minWidth();
-        while (selectedWidth < type.maxWidth() * mode.widthUtilization() && type.size() / selectedWidth >= this.d){
+        int selectedWidth = type.getMinWidth();
+        while (selectedWidth < type.getMaxWidth() * mode.widthUtilization() && type.getSize() / selectedWidth >= this.d){
             selectedWidth *= 2;
         }
         int physicalWidth = selectedWidth;
-        int physicalDepth = type.size() / selectedWidth;
+        int physicalDepth = type.getSize() / selectedWidth;
         
         int parallel = Math.ceilDiv(this.w, physicalWidth);
         int serial = Math.ceilDiv(this.d, physicalDepth);
@@ -44,13 +44,13 @@ public class LogicalRAM {
         // Allocate physical RAM according to the type, mode and width
 
         // Satisfy depth first, b/c linking RAM parallel has no penalty
-        int selectedWidth = type.minWidth();
+        int selectedWidth = type.getMinWidth();
         
-        while (selectedWidth * 2 <= type.maxWidth() * mode.widthUtilization() && type.size() / (selectedWidth * 2) >= this.d){
+        while (selectedWidth * 2 <= type.getMaxWidth() * mode.widthUtilization() && type.getSize() / (selectedWidth * 2) >= this.d){
             selectedWidth *= 2;
         }
         this.physicalWidth = selectedWidth;
-        this.physicalDepth = type.size() / selectedWidth;
+        this.physicalDepth = type.getSize() / selectedWidth;
         
         this.parallel = Math.ceilDiv(this.w, this.physicalWidth);
         this.serial = Math.ceilDiv(this.d, this.physicalDepth);
@@ -70,6 +70,6 @@ public class LogicalRAM {
                 decLUT = this.serial;
                 muxLUT = Math.ceilDiv((this.serial-1), 3);
         }
-        this.additionalLUT = (decLUT + muxLUT) * this.parallel + this.serial * this.parallel * this.type.lutImpl();
+        this.additionalLUT = (decLUT + muxLUT) * this.parallel + this.serial * this.parallel * this.type.getLutImpl();
     }
 }
