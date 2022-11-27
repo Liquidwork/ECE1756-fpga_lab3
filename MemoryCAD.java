@@ -14,6 +14,7 @@ public class MemoryCAD {
     public static final int LOGICBLOCKLUT = 10;
 
     public static void main(String[] args){
+        long startTime = System.nanoTime();
         try {
             File file = new File("logical_rams.txt");
             BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -90,6 +91,11 @@ public class MemoryCAD {
             }
             writer.close();
             System.out.println("Average area usage (Geometric): " + accProduct);
+            long runtime = System.nanoTime() - startTime;
+            // Denote runtime in fixed point (x.3) notation.
+            int runtimeMs = (int) (runtime / 10000000);
+            int runtimePoint = (int) ((runtime / 1000) % 1000);
+            System.out.println("Runtime: " + runtimeMs + "." + runtimePoint + "ms");
             // Print the stats of resource usage
             file = new File(dir, "stats.csv");
             writer = new PrintWriter(file);
