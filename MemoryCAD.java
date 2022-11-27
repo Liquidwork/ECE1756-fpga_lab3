@@ -78,6 +78,7 @@ public class MemoryCAD {
             PrintWriter writer = new PrintWriter(file);
             // Start the execution
             CircuitRAM[] circuits = new CircuitRAM[circuitNum];
+            double accProduct = 1.;
             for (int i = 0; i < circuits.length; i++) {
                 System.out.println("Fitting circuit " + i);
                 circuits[i] = CircuitRAM.parseCircuit(i, logicBlockCount[i] * 10, ramRecordsList[i], typeSet);
@@ -85,8 +86,10 @@ public class MemoryCAD {
                 for (String s : generateRecord(circuits[i])) {
                     writer.println(s);
                 }
+                accProduct *= Math.pow((double) circuits[i].resource.getTotalArea(), 1 / (double) circuits.length);
             }
             writer.close();
+            System.out.println("Average area usage (Geometric): " + accProduct);
             // Print the stats of resource usage
             file = new File(dir, "stats.csv");
             writer = new PrintWriter(file);
