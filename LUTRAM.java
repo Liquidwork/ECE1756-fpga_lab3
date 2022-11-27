@@ -1,12 +1,16 @@
-public class BRAM extends RAMType {
+public class LUTRAM extends RAMType {
+
     protected int id;
     protected int size;
+    protected int minWidth;
     protected int maxWidth;
     protected int lutRatio;
+    protected int lutImpl;
 
-    public BRAM(int id, int size, int maxWidth, int lutRatio){
+    public LUTRAM(int id, int size, int minWidth, int maxWidth, int lutRatio){
         this.id = id;
         this.size = size;
+        this.minWidth = minWidth;
         this.maxWidth = maxWidth;
         this.lutRatio = lutRatio;
     }
@@ -28,7 +32,7 @@ public class BRAM extends RAMType {
 
     @Override
     public int getMinWidth() {
-        return 1;
+        return minWidth;
     }
 
     @Override
@@ -38,7 +42,7 @@ public class BRAM extends RAMType {
 
     @Override
     public int getLutImpl() {
-        return 0;
+        return MemoryCAD.LOGICBLOCKLUT;
     }
     
 }

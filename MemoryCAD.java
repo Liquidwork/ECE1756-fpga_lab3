@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 
 public class MemoryCAD {
@@ -56,50 +57,77 @@ public class MemoryCAD {
             }
             reader.close();
 
+            // Set RAM Type 
+            ArrayList<RAMType> typeSet = new ArrayList<>(3);
+            typeSet.add(new LUTRAM(1, 64 * 10, 10, 20, 2 * MemoryCAD.LOGICBLOCKLUT));
+            typeSet.add(new BRAM(2, 8192, 32, 10 * MemoryCAD.LOGICBLOCKLUT));
+            typeSet.add(new BRAM(3, 1024 * 128, 128, 300 * MemoryCAD.LOGICBLOCKLUT));
+
             // Map file name
             SimpleDateFormat format = new SimpleDateFormat("yy_MM_dd_HH_mm_ss");
             String timestamp = format.format(new Date());
             // Make an output dir with timestamp
-            File dir = new File("output_e");
+            File dir = new File("output");
             if (!dir.isDirectory()) {
                 dir.mkdir();
             }
             dir = new File(dir, timestamp);
             dir.mkdir();
 
-            file = new File(dir, "optimization_result.txt");
+            file = new File(dir, "map.txt");
             PrintWriter writer = new PrintWriter(file);
-            writer.println("Size, width, ratio, average area");
             // Start the execution
             CircuitRAM[] circuits = new CircuitRAM[circuitNum];
-            for (int size = 1; size <=128; size *= 2){
-                int optimal_width = 0, optimal_ratio = 0;
-                double minimumArea = Double.MAX_VALUE;
-                for (int width = 1; width <= 512; width *= 2){
-                    for (int ratio = 1; ratio <= 512; ratio *= 2){
-                        RAMType ramType = new BRAM(size * 1024, width, ratio);
-                        ArrayList<RAMType> ramTypes = new ArrayList<>();
-                        ramTypes.add(ramType);
-                        double accProduct = 1;
-                        long area = 0;
-                        for (int i = 0; i < circuits.length; i++) {
-                            circuits[i] = CircuitRAM.parseCircuit(i, logicBlockCount[i] * 10, ramRecordsList[i], ramTypes);
-                            area = circuits[i].resource.getTotalArea();
-                            accProduct *= Math.pow(area, 1 / (double)circuits.length);
-                        }
-                        if (accProduct < minimumArea){
-                            minimumArea = accProduct;
-                            optimal_width = width;
-                            optimal_ratio = ratio;
-                        }
-                        System.out.println(size + ", " + width + ", " + ratio + ", " + accProduct);
-                    }
+            for (int i = 0; i < circuits.length; i++) {
+                System.out.println("Fitting circuit " + i);
+                circuits[i] = CircuitRAM.parseCircuit(i, logicBlockCount[i] * 10, ramRecordsList[i], typeSet);
+                System.out.println(circuits[i].resource);
+                for (String s : generateRecord(circuits[i])) {
+                    writer.println(s);
                 }
-                writer.println(size + ", " + optimal_width + ", " + optimal_ratio + ", " + minimumArea);
+            }
+            writer.close();
+            // Print the stats of resource usage
+            file = new File(dir, "stats.csv");
+            writer = new PrintWriter(file);
+            // print the line title at first line in csv format
+            writer.println("ciruit_id,lutram,8kBRAM,128kBRAM,regularLB,requiredLB,TotalArea");
+            for (int i = 0; i < circuits.length; i++) {
+                line = circuits[i].id + ",";
+                line += circuits[i].resource.ramCount.get(typeSet.get(0)) + ",";
+                line += circuits[i].resource.ramCount.get(typeSet.get(1)) + ",";
+                line += circuits[i].resource.ramCount.get(typeSet.get(2)) + ",";
+                line += Math.ceilDiv(circuits[i].resource.getLUTRegular(), MemoryCAD.LOGICBLOCKLUT) + ",";
+                line += Math.ceilDiv(circuits[i].resource.getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) + ",";
+                line += circuits[i].resource.getTotalArea();
+                writer.println(line);
             }
             writer.close();
         }catch (IOException ioe){
             ioe.printStackTrace();
         }
+    }
+
+
+    /**
+     * Generate the mapping list for this RAM circuit. Each line represents the mapping for a
+     * logical RAM. The list can be used to generate the mapping file.
+     * @return a list of record
+     */
+    public static List<String> generateRecord(CircuitRAM circuit){
+        List<String> list = new ArrayList<>();
+        for (LogicalRAM ram : circuit.logicRAMList) {       
+            String mode = "";
+            switch(ram.mode){
+                case ROM:               mode = "ROM"; break;
+                case SIMPLEDUALPORT:    mode = "SimpleDualPort"; break;
+                case SINGLEPORT:        mode = "SinglePort"; break;
+                case TRUEDUALPORT:      mode = "TrueDualPort"; break;
+            }
+            list.add(String.format("%d %d %d LW %d LD %d ID %d S %d P %d Type %d Mode %s W %d D %d", 
+            circuit.id, ram.id, ram.additionalLUT, ram.w, ram.d, ram.id, ram.serial, ram.parallel, ram.type.getId(),
+            mode, ram.physicalWidth, ram.physicalDepth ));
+        }
+        return list;
     }
 }

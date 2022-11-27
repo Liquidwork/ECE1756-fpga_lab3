@@ -33,7 +33,7 @@ public class ResourceOrganizer {
      * @return if it is ready to add, return true
      */
     public boolean ready(RAMType type, int count){
-        if (ramCount.get(type) + count > getLUTRequired() / type.lutRatio() / MemoryCAD.LOGICBLOCKLUT){
+        if (ramCount.get(type) + count > getLUTRequired() / type.getLutRatio()){
             return false;
         }
         return true;
@@ -71,10 +71,10 @@ public class ResourceOrganizer {
     public long getTotalArea(){
         long area = 0;
         for(RAMType type : ramCount.keySet()){
-            if (type.lutImpl() == 0) { // not a LUTRAM
-                long singleRamSize = 9000 + 5 * type.size() + 90 * (int) Math.ceil(Math.sqrt(type.size())) + 600 * 2 * type.maxWidth();
+            if (type.getLutImpl() == 0) { // not a LUTRAM
+                long singleRamSize = 9000 + 5 * type.getSize() + 90 * (int) Math.ceil(Math.sqrt(type.getSize())) + 600 * 2 * type.getMaxWidth();
 
-                area += Math.ceilDiv(getLUTRequired(), type.lutRatio()) * singleRamSize;
+                area += Math.ceilDiv(getLUTRequired(), type.getLutRatio()) * singleRamSize;
             }
         }
         // half of the LUT can implement LUT RAM, simply average the area usage
@@ -111,7 +111,7 @@ public class ResourceOrganizer {
         // Find minimum LUT needed (maximum among needed value)
         int minNeededLUT = 0;
         for (RAMType type : ramCount.keySet()){
-            int needed = ramCount.get(type) * type.lutRatio() * MemoryCAD.LOGICBLOCKLUT;
+            int needed = ramCount.get(type) * type.getLutRatio();
             if(needed > minNeededLUT) minNeededLUT = needed;
         }
         tempLUT -= getLUTRequired() - minNeededLUT;
@@ -126,7 +126,7 @@ public class ResourceOrganizer {
                     "RAM usage: \n";
         for (RAMType type : ramCount.keySet()){
             s += " -" + type + ": " + ramCount.get(type) + "/" + 
-            getLUTRequired() / type.lutRatio() / MemoryCAD.LOGICBLOCKLUT+ "\n";
+            getLUTRequired() / type.getLutRatio()+ "\n";
         }
         return s;
     }
