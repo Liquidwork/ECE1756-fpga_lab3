@@ -81,19 +81,19 @@ public class Optimize3 {
                     for (int widthSmall = 1; widthSmall <= 512; widthSmall *= 2){
                         for (int ratioSmall = 1; ratioSmall <= 32; ratioSmall *= 2){
                             for (int widthLarge = widthSmall; widthLarge <= 512; widthLarge *= 2){
-                                for (int ratioLarge = ratioSmall; ratioLarge <= 1024; ratioLarge *= 2){
+                                for (int ratioLarge = ratioSmall; ratioLarge <= 4096; ratioLarge *= 2){
                                     RAMType ramTypeSmall = new BRAM(2, sizeSmall * 1024, widthSmall, ratioSmall * MemoryCAD.LOGICBLOCKLUT);
                                     RAMType ramTypeLarge = new BRAM(3, sizeLarge * 1024, widthLarge, ratioLarge * MemoryCAD.LOGICBLOCKLUT);
                                     ArrayList<RAMType> ramTypes = new ArrayList<>();
                                     ramTypes.add(lutram);
                                     ramTypes.add(ramTypeSmall);
                                     ramTypes.add(ramTypeLarge);
-                                    double accProduct = 1;
+                                    double accProduct = 1.;
                                     long area = 0;
                                     for (int i = 0; i < circuits.length; i++) {
                                         circuits[i] = CircuitRAM.parseCircuit(i, logicBlockCount[i] * 10, ramRecordsList[i], ramTypes);
                                         area = circuits[i].resource.getTotalArea();
-                                        accProduct *= Math.pow(area, 1 / (double)circuits.length);
+                                        accProduct *= Math.pow((double) area, 1 / (double)circuits.length);
                                     }
                                     if (accProduct < minimumArea){
                                         minimumArea = accProduct;
