@@ -12,6 +12,11 @@ public class Optimize3 {
 
     public static void main(String[] args){
         try {
+            int lbRatio = 2;
+            if (args.length >= 1){
+                lbRatio = Integer.parseInt(args[0]);
+            }
+
             File file = new File("logical_rams.txt");
             BufferedReader reader = new BufferedReader(new FileReader(file));
             // Get total number of circuit
@@ -69,7 +74,7 @@ public class Optimize3 {
             PrintWriter writer = new PrintWriter(file);
             writer.println("Size 1, width 1, ratio 1, Size 2, width 2, ratio 2, average area");
             // Prepare the LUTRAM instance
-            LUTRAM lutram = new LUTRAM(1, 64 * 10, 10, 20, 2 * MemoryCAD.LOGICBLOCKLUT);
+            LUTRAM lutram = new LUTRAM(1, 64 * 10, 10, 20, lbRatio * MemoryCAD.LOGICBLOCKLUT);
             // Start the execution
             CircuitRAM[] circuits = new CircuitRAM[circuitNum];
             for (int sizeSmall = 1; sizeSmall <=64; sizeSmall *= 2){
