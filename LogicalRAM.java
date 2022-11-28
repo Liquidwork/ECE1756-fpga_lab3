@@ -27,7 +27,7 @@ public class LogicalRAM {
 
         // Satisfy depth first, b/c linking RAM parallel has no penalty
         int selectedWidth = type.getMinWidth();
-        while (selectedWidth < type.getMaxWidth() * mode.getWidthUtilization() && type.getSize() / selectedWidth >= this.d){
+        while (selectedWidth * 2 <= type.getMaxWidth() * mode.getWidthUtilization() && type.getSize() / (selectedWidth * 2) >= this.d){
             selectedWidth *= 2;
         }
         int physicalWidth = selectedWidth;

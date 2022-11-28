@@ -33,6 +33,8 @@ public class CircuitRAM {
 
         unparsedRecord.sort(((o1, o2) -> o1.d * o1.w - o2.d * o2.w)); // ascending order
 
+        List<LogicalRAM> trueDualPortList = new LinkedList<>();
+
         // Then, initialize all the dual-port RAM (BRAM type only)
         switch (circuitRAM.ramTypeList.size()){
             case 1:
@@ -40,7 +42,7 @@ public class CircuitRAM {
             for (LogicalRAM ram : unparsedRecord) {
                 int ramUsage = ram.peekSize(type);
                 if(!resource.ready(type, ramUsage)){
-                    resource.addTempLUT(ramUsage);
+                    resource.addTempLUT(ramUsage * type.getLutRatio());
                 }
                 ram.parse(type);
                 resource.addLUT(ram.additionalLUT);
@@ -49,6 +51,23 @@ public class CircuitRAM {
             break;
             
             case 2:
+
+            for (LogicalRAM ram : unparsedRecord) {
+                if (ram.mode == RAMMode.TRUEDUALPORT){
+                    trueDualPortList.add(ram);
+                }
+            }
+
+            for (LogicalRAM ram : trueDualPortList) {
+                int peekedSize = ram.peekSize(circuitRAM.ramTypeList.get(0));
+                if (!resource.ready(circuitRAM.ramTypeList.get(0), peekedSize)){
+                    resource.addTempLUT(peekedSize * circuitRAM.ramTypeList.get(0).getLutRatio());
+                }
+                ram.parse(circuitRAM.ramTypeList.get(0));
+                resource.addLUT(ram.additionalLUT);
+                resource.addRAM(ram.type, ram.serial * ram.parallel);
+            }
+
             // Try to implement with BRAM until full
             while(resource.ready(circuitRAM.ramTypeList.get(0)) && unparsedRecord.size() > 0){
                 LogicalRAM ram = unparsedRecord.getLast(); // Get the element with largest size
@@ -90,18 +109,17 @@ public class CircuitRAM {
                 }
                 
                 if (ramParsed == false){ // Allocate some temporal LUT so that the program will not stuck
-                    int lutTemp = unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1));
+                    int lutTemp = unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1)) * circuitRAM.ramTypeList.get(1).getLutRatio();
                     if(unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(1)) >= 16) lutTemp = Integer.MAX_VALUE; // Not taken
                     int bramTemp = unparsedRecord.getLast().peekSize(circuitRAM.ramTypeList.get(0)) * circuitRAM.ramTypeList.get(0).getLutRatio();
                     int minTempLUTIncrease = lutTemp > bramTemp ? bramTemp : lutTemp;
-                    resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
+                    resource.addTempLUT(minTempLUTIncrease);
                     // We can add a little bit more TempLUT, b/c we will clean the unused tempLUT anyway
                 }
             }
             break;
 
             case 3:
-            List<LogicalRAM> trueDualPortList = new ArrayList<>();
 
             for (LogicalRAM ram : unparsedRecord) {
                 if (ram.mode == RAMMode.TRUEDUALPORT){
@@ -110,11 +128,18 @@ public class CircuitRAM {
             }
 
             for (LogicalRAM ram : trueDualPortList) {
-                if (ram.w * ram.d > 16 && resource.ready(circuitRAM.ramTypeList.get(0), ram.peekSize(circuitRAM.ramTypeList.get(0)))){
+                if (ram.w * ram.d > circuitRAM.ramTypeList.get(1).getSize() && 
+                resource.ready(circuitRAM.ramTypeList.get(0), ram.peekSize(circuitRAM.ramTypeList.get(0)))){
                     ram.parse(circuitRAM.ramTypeList.get(0));
                 } else {
+                    int peekedSize = ram.peekSize(circuitRAM.ramTypeList.get(1));
+                    if (!resource.ready(circuitRAM.ramTypeList.get(1), peekedSize)){
+                        resource.addTempLUT(peekedSize * circuitRAM.ramTypeList.get(1).getLutRatio());
+                    }
                     ram.parse(circuitRAM.ramTypeList.get(1));
                 }
+                resource.addLUT(ram.additionalLUT);
+                resource.addRAM(ram.type, ram.serial * ram.parallel);
             }
 
             unparsedRecord.removeAll(trueDualPortList); // parsed, so remove from list
@@ -198,11 +223,11 @@ public class CircuitRAM {
                 }
                 
                 if (ramParsed == false){ // Allocate some temporal LUT so that the program will not stuck
-                    int lutTemp = unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2));
+                    int lutTemp = unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2)) * circuitRAM.ramTypeList.get(2).getLutRatio();
                     if(unparsedRecord.getFirst().peekSize(circuitRAM.ramTypeList.get(2)) >= 16) lutTemp = Integer.MAX_VALUE; // Not taken
                     int bramTemp = unparsedRecord.getLast().peekSize(circuitRAM.ramTypeList.get(1)) * circuitRAM.ramTypeList.get(1).getLutRatio();
                     int minTempLUTIncrease = lutTemp > bramTemp ? bramTemp : lutTemp;
-                    resource.addTempLUT(minTempLUTIncrease * MemoryCAD.LOGICBLOCKLUT);
+                    resource.addTempLUT(minTempLUTIncrease);
                     // We can add a little bit more TempLUT, b/c we will clean the unused tempLUT anyway
                 }
             }
