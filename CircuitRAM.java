@@ -33,7 +33,7 @@ public class CircuitRAM {
 
         unparsedRecord.sort(((o1, o2) -> o1.d * o1.w - o2.d * o2.w)); // ascending order
 
-        List<LogicalRAM> trueDualPortList = new LinkedList<>();
+        LinkedList<LogicalRAM> trueDualPortList = new LinkedList<>();
 
         // Then, initialize all the dual-port RAM (BRAM type only)
         switch (circuitRAM.ramTypeList.size()){
@@ -127,11 +127,31 @@ public class CircuitRAM {
                 }
             }
 
-            for (LogicalRAM ram : trueDualPortList) {
+            unparsedRecord.removeAll(trueDualPortList); // parsed, so remove from list
+
+            // for (LogicalRAM ram : trueDualPortList) {
+            //     if (ram.w * ram.d > circuitRAM.ramTypeList.get(1).getSize() && 
+            //     resource.ready(circuitRAM.ramTypeList.get(0), ram.peekSize(circuitRAM.ramTypeList.get(0)))){
+            //         ram.parse(circuitRAM.ramTypeList.get(0));
+            //     } else {
+            //         int peekedSize = ram.peekSize(circuitRAM.ramTypeList.get(1));
+            //         if (!resource.ready(circuitRAM.ramTypeList.get(1), peekedSize)){
+            //             resource.addTempLUT(peekedSize * circuitRAM.ramTypeList.get(1).getLutRatio());
+            //         }
+            //         ram.parse(circuitRAM.ramTypeList.get(1));
+            //     }
+            //     resource.addLUT(ram.additionalLUT);
+            //     resource.addRAM(ram.type, ram.serial * ram.parallel);
+            // }
+
+            while (trueDualPortList.size() > 0) {
+                LogicalRAM ram = trueDualPortList.peekLast();
                 if (ram.w * ram.d > circuitRAM.ramTypeList.get(1).getSize() && 
                 resource.ready(circuitRAM.ramTypeList.get(0), ram.peekSize(circuitRAM.ramTypeList.get(0)))){
                     ram.parse(circuitRAM.ramTypeList.get(0));
+                    trueDualPortList.removeLast();
                 } else {
+                    ram = trueDualPortList.removeFirst();
                     int peekedSize = ram.peekSize(circuitRAM.ramTypeList.get(1));
                     if (!resource.ready(circuitRAM.ramTypeList.get(1), peekedSize)){
                         resource.addTempLUT(peekedSize * circuitRAM.ramTypeList.get(1).getLutRatio());
@@ -141,8 +161,6 @@ public class CircuitRAM {
                 resource.addLUT(ram.additionalLUT);
                 resource.addRAM(ram.type, ram.serial * ram.parallel);
             }
-
-            unparsedRecord.removeAll(trueDualPortList); // parsed, so remove from list
 
             // Start Generating the largest logical RAM with BRAM until reach the limit
 
@@ -171,6 +189,8 @@ public class CircuitRAM {
                 secondLargestRAM.offer(ram); // Record the second largest from the largest to the smallest
                 unparsedRecord.removeLast();
             }
+
+            resource.releaseTempLUT();
 
             // Generate LUTRAM from the logical RAM from least size, and produce second largest BRAM if capacity increases
 

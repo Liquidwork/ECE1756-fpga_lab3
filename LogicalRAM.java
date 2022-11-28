@@ -71,6 +71,9 @@ public class LogicalRAM {
                 muxLUT = ceilDiv((this.serial-1), 3);
         }
         this.additionalLUT = (decLUT + muxLUT) * this.parallel + this.serial * this.parallel * this.type.getLutImpl();
+        if (this.serial >= 2 && this.mode == RAMMode.TRUEDUALPORT){
+            this.additionalLUT += 2;
+        }
     }
 
     /**
