@@ -70,19 +70,19 @@ public class ResourceOrganizer {
      */
     public long getTotalArea(){
         long area = 0;
-        boolean lutramExist = false;
+        RAMType lutram = null;
         for(RAMType type : ramCount.keySet()){
             if (type.getLutImpl() == 0) { // not a LUTRAM
                 long singleRamArea = 9000 + 5 * type.getSize() + 90 * (int) Math.ceil(Math.sqrt(type.getSize())) + 600 * 2 * type.getMaxWidth();
 
                 area += ceilDiv(getLUTRequired(), type.getLutRatio()) * singleRamArea;
             } else {
-                lutramExist = true;
+                lutram = type;
             }
         }
         long lutramArea = 35000;
-        if (lutramExist) {
-            lutramArea = (35000 + 40000) / 2;
+        if (lutram != null) { // lutram exist
+            lutramArea = (35000 * lutram.getLutRatio() + 5000) / lutram.getLutRatio();
         }
         // half of the LUT can implement LUT RAM, simply average the area usage
         area += (long) ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * lutramArea;
