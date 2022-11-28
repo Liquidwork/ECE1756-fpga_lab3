@@ -14,7 +14,12 @@ public class Optimize3 {
         try {
             int lbRatio = 2;
             if (args.length >= 1){
-                lbRatio = Integer.parseInt(args[0]);
+                try{
+                    lbRatio = Integer.parseInt(args[0]);
+                } catch (NumberFormatException e){
+                    System.err.println("The input parameter must be an integer!");
+                    return;
+                }
             }
 
             File file = new File("logical_rams.txt");
