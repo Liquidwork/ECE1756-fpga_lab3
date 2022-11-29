@@ -82,7 +82,7 @@ public class ResourceOrganizer {
         }
         long lutramArea = 35000;
         if (lutram != null) { // lutram exist
-            lutramArea = (35000 * lutram.getLutRatio() + 5000) / lutram.getLutRatio();
+            lutramArea = (35000 * lutram.getLutRatio() / MemoryCAD.LOGICBLOCKLUT + 5000) / lutram.getLutRatio() * MemoryCAD.LOGICBLOCKLUT;
         }
         // half of the LUT can implement LUT RAM, simply average the area usage
         area += (long) ceilDiv(getLUTRequired(), MemoryCAD.LOGICBLOCKLUT) * lutramArea;
