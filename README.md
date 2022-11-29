@@ -45,3 +45,7 @@ To run the optimizer of two BRAM with LUTRAM (solver for problem G)
 where 1 of n logic blocks can be used as LUTRAM, the default value is 2 (if not specified any value).
 
 The output will be in ./output_g folder, organized with timestamp.
+
+## Note
+
+A example of map file is in the folder called map_example.txt
